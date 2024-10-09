@@ -1,0 +1,305 @@
+############################################## - ⚓️ 锚点区开始 - ##############################################
+# 锚点 - 远程订阅组
+PP: &PP {type: http, interval: 86400, health-check: {enable: true, url: 'https://www.gstatic.com/generate_204', interval: 600}}
+# 锚点 - 筛选组 
+HK: &HK '(?i)港|hk|hongkong|hong kong'
+TW: &TW '(?i)台|tw-|taiwan|tai wan'
+SG: &SG '(?i)新加坡|sg|singapore|狮城'
+JP: &JP '(?i)日本|jp|japan'
+US: &US '(?i)美|us|unitedstates|united states'
+OR: &OR '(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*'
+# 锚点 - 策略组
+UT: &UT {type: url-test, interval: 600, tolerance: 100, lazy: true, url: 'https://www.gstatic.com/generate_204', hidden: true, include-all: true}
+# 锚点 - 选择组 
+T1: &T1 {type: select, proxies: [香港, 日本, 狮城, 台湾, 美国, 其他]}
+T2: &T2 {type: select, proxies: [国内, 香港, 日本, 狮城, 台湾, 美国, 其他]}
+T3: &T3 {type: select, proxies: [🚀 Proxy, 国内]}
+# 锚点 - 规则集
+DMrs: &DMrs {type: http, interval: 86400, behavior: domain, format: mrs}
+DText: &DText {type: http, interval: 86400, behavior: domain, format: text}
+IMrs: &IMrs {type: http, interval: 86400, behavior: ipcidr, format: mrs}
+IText: &IText {type: http, interval: 86400, behavior: ipcidr, format: text}
+CText: &CText {type: http, interval: 86400, behavior: classical, format: text}
+############################################## - ⚓️ 锚点区结束 - ############################################## 
+# 远程订阅组
+proxy-providers:
+  机场A: {<<: *PProviders, url: '机场订阅地址', override: {additional-prefix: '[A] '}}
+  机场B: {<<: *PProviders, url: '机场订阅地址', override: {additional-prefix: '[B] '}}
+# 本地自建节点组
+proxies:
+  - {name: 国内, type: direct, udp: true}
+# 策略组 
+proxy-groups:
+  - {name: 🚀 Proxy, <<: *T1}
+  - {name: ✈️ Telegram, <<: *T1}
+  - {name: 🤖 OpenAi, <<: *T1}
+  - {name: 📺️ YouTube, <<: *T1}
+  - {name: 📽️ Streaming, <<: *T1}
+  - {name: 📻 Spotify, <<: *T2}
+  - {name: 🎞️ Emby&Game, <<: *T2}
+  - {name: 📏 SpeedTest, <<: *T2}
+# 地区策略
+  - {name: 香港, type: select, proxies: [香港自动], include-all: true, filter: *HK}
+  - {name: 台湾, type: select, proxies: [台湾自动], include-all: true, filter: *TW}
+  - {name: 狮城, type: select, proxies: [狮城自动], include-all: true, filter: *SG}
+  - {name: 日本, type: select, proxies: [日本自动], include-all: true, filter: *JP}
+  - {name: 美国, type: select, proxies: [美国自动], include-all: true, filter: *US}
+  - {name: 其他, type: select, proxies: [其他自动], include-all: true, filter: *OR}
+  - {name: 未匹配, <<: *T3}
+# 自动测速
+  - {name: 香港自动, <<: *UT, filter: *HK}
+  - {name: 台湾自动, <<: *UT, filter: *TW}
+  - {name: 狮城自动, <<: *UT, filter: *SG}
+  - {name: 日本自动, <<: *UT, filter: *JP}
+  - {name: 美国自动, <<: *UT, filter: *US}
+  - {name: 其他自动, <<: *UT, filter: *OR}
+
+# 远程规则集
+rule-providers: 
+  fakeip-filter:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/fakeip-filter.mrs
+  fix-direct:
+    <<: *CText
+    url: https://mirror.ghproxy.com/https://github.com/666OS/YYDS/raw/main/mihomo/rules/fix-direct.list
+  Speedtest:
+    <<: *CText
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/networktest.list
+  Emby:
+    <<: *CText
+    url: https://mirror.ghproxy.com/https://github.com/666OS/YYDS/raw/main/mihomo/rules/emby.list
+  OpenAi:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/openai.mrs
+  Ai-chat:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-ai-chat-!cn.mrs
+  Telegram:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/telegram.mrs
+  instagram:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/instagram.mrs
+  Meta:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/meta.mrs
+  YouTube:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/youtube.mrs
+  Spotify:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/spotify.mrs
+  Netflix:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/netflix.mrs
+  Disney:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/disney.mrs
+  HBO:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/hbo.mrs
+  TikTok:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/tiktok.mrs
+  Github:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/github.mrs
+  Onedrive:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/onedrive.mrs
+  Microsoft@cn:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/microsoft@cn.mrs
+  Microsoft:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/microsoft.mrs
+  Google:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/google.mrs
+  Apple-cn:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/apple-cn.mrs
+  Apple:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/apple.mrs
+  Cloudflare-cn:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/cloudflare-cn.mrs
+  Category-games:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-games.mrs
+  Category-media-cn:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-media-cn.mrs
+  Category-media:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-media.mrs
+  Category-social-media-!cn:
+    <<: *DMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-social-media-!cn.mrs
+  Proxy:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/proxy.mrs
+  private_domain:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/private.mrs
+  cn_domain:
+    <<: *DMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/cn.mrs
+# IP类
+  Google_ip:
+    <<: *IMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/google.mrs
+  Netflix_ip:
+    <<: *IMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/netflixip.mrs
+  Telegram_ip:
+    <<: *IMrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/telegram.mrs
+  Private_ip:
+    <<: *IMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/privateip.mrs
+  cn_ip:
+    <<: *IMrs
+    url: https://github.com/DustinWin/ruleset_geodata/releases/download/clash-ruleset/cnip.mrs
+
+rules:
+  - RULE-SET,fix-direct,国内
+  - RULE-SET,Private_ip,国内,no-resolve
+  - RULE-SET,Speedtest,📏 SpeedTest
+  - RULE-SET,OpenAi,🤖 OpenAi
+  - RULE-SET,Ai-chat,🤖 OpenAi
+  - RULE-SET,Telegram,✈️ Telegram
+  - RULE-SET,Emby,🎞️ Emby&Game
+  - RULE-SET,YouTube,📺️ YouTube
+  - RULE-SET,Spotify,📻 Spotify
+  - RULE-SET,Netflix,📽️ Streaming
+  - RULE-SET,Disney,📽️ Streaming
+  - RULE-SET,HBO,📽️ Streaming
+  - RULE-SET,TikTok,📽️ Streaming
+  - RULE-SET,instagram,📽️ Streaming
+  - RULE-SET,Github,🚀 Proxy
+  - RULE-SET,Google,🚀 Proxy
+  - RULE-SET,Meta,🚀 Proxy
+  - RULE-SET,Onedrive,国内
+  - RULE-SET,Microsoft@cn,国内
+  - RULE-SET,Microsoft,国内
+  - RULE-SET,Apple-cn,国内
+  - RULE-SET,Apple,国内
+  - RULE-SET,Cloudflare-cn,国内
+  - RULE-SET,Category-games,🎞️ Emby&Game
+  - RULE-SET,Category-media-cn,国内
+  - RULE-SET,Category-media,🚀 Proxy
+  - RULE-SET,Category-social-media-!cn,🚀 Proxy
+  - RULE-SET,cn_domain,国内
+  - RULE-SET,Proxy,🚀 Proxy
+# IP 规则
+  - RULE-SET,Google_ip,🚀 Proxy,no-resolve
+  - RULE-SET,Netflix_ip,📽️ Streaming,no-resolve
+  - RULE-SET,Telegram_ip,✈️ Telegram,no-resolve
+  - RULE-SET,cn_ip,国内
+  - MATCH,未匹配
+
+# 全局配置
+port: 7890
+socks-port: 7891
+mixed-port: 7892
+redir-port: 7893
+tproxy-port: 7894
+unified-delay: true
+geodata-mode: false
+geodata-loader: standard
+geo-auto-update: true
+geo-update-interval: 24
+tcp-concurrent: true
+find-process-mode: strict
+global-client-fingerprint: chrome
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+ipv6: true
+udp: true
+keep-alive-idle: 600 
+keep-alive-interval: 30
+# 外部控制 (API)
+external-controller: 0.0.0.0:9090
+external-ui-url: https://mirror.ghproxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip
+external-ui: ui
+external-ui-name: metacubexd
+secret: 123456
+# 自定 GEO 下载地址
+geox-url:
+  geosite: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
+  mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb
+  geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat
+  asn: https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb
+# 缓存
+profile:
+  store-selected: true
+  store-fake-ip: true
+# 域名嗅探
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  force-domain:
+    - '+.v2ex.com'
+  skip-domain:
+    - 'rule-set:cn_domain,private_domain'
+    - 'Mijia Cloud'
+    - '+.push.apple.com'
+    - '+.wechat.com'
+    - '+.qpic.cn'
+    - '+.qq.com'
+    - '+.wechatapp.com'
+    - '+.vivox.com'
+    - '+.oray.com'
+    - '+.sunlogin.net'
+# 虚拟网卡模式
+tun:
+  enable: true
+  stack: mixed
+  dns-hijack:
+    - 'any:53'
+    - 'tcp://any:53'
+  auto-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+# DNS 设置
+dns:
+  enable: true
+  ipv6: true
+  respect-rules: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - "rule-set:cn_domain,private_domain,fakeip-filter"
+# DNS 服务器
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  proxy-server-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver-policy:
+    "rule-set:cn_domain,private_domain":
+    - 223.5.5.5
+    - 119.29.29.29
+    "rule-set:Proxy":
+      - "https://dns.cloudflare.com/dns-query"
+      - "https://dns.google/dns-query"
+
